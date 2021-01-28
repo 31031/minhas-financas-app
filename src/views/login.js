@@ -1,6 +1,12 @@
-import React from 'react';
+import React from 'react'
 import Card from '../components/card'
 import FormGroup from '../components/form-group'
+import { withRouter } from 'react-router-dom'
+
+import UsuarioService from '../app/service/usuarioService'
+import LocalStorageService from '../app/service/localstorageService'
+import { mensagemErro } from '../components/toastr'
+import { AuthContext  } from '../main/provedorAutenticacao'
 
 class Login extends React.Component{
 
@@ -9,16 +15,32 @@ class Login extends React.Component{
         senha: ''
     }
 
-    entrar = () => {
-        console.log('Email: ', this.state.email)
-        console.log('senha: ', this.state.senha)
+    constructor(){
+        super();
+        this.service = new UsuarioService();
     }
-    
+
+    entrar = () => {
+        this.service.autenticar({
+            email: this.state.email,
+            senha: this.state.senha
+        }).then( response => {
+            this.context.iniciarSessao(response.data)
+            this.props.history.push('/home')
+        }).catch( erro => {
+           mensagemErro(erro.response.data)
+        })
+    }
+
+    prepareCadastrar = () => {
+        this.props.history.push('/cadastro-usuarios')
+    }
+
     render(){
-      return(
-         <div className="container">
-            <div className="row"> 
-                <div className="col-md-6" style={ {position: 'relative', left: '300px'} }>
+        return (
+
+            <div className="row">
+                <div className="col-md-6" style={ {position : 'relative', left: '300px'} }>
                     <div className="bs-docs-section">
                         <Card title="Login">
                             <div className="row">
@@ -29,22 +51,25 @@ class Login extends React.Component{
                                                 <input type="email" 
                                                     value={this.state.email}
                                                     onChange={e => this.setState({email: e.target.value})}
-                                                    className="form-control"
+                                                    className="form-control" 
                                                     id="exampleInputEmail1" 
                                                     aria-describedby="emailHelp" 
                                                     placeholder="Digite o Email" />
                                             </FormGroup>
-                                            <FormGroup label="Senha: *" htmlFor="exampleInputPassword1"> 
-                                                <input type="password"
-                                                    value={this.state.senha}
-                                                    onChange={e => this.setState({senha: e.target.value})}
-                                                    className="form-control"
-                                                    id="exampleInputPassword1" 
-                                                    placeholder="Digite a Senha"/>
+                                            <FormGroup label="Senha: *" htmlFor="exampleInputPassword1">
+                                                <input type="password" 
+                                                        value={this.state.senha}
+                                                        onChange={e => this.setState({senha: e.target.value})}
+                                                        className="form-control" 
+                                                        id="exampleInputPassword1" 
+                                                        placeholder="Password" />
                                             </FormGroup>
-                                            <button onClick={this.entrar} className="btn btn-success">Entrar</button>
-                                            <button onClick={this.entrar} className="btn btn-secondary">Cadastrar</button>
-  
+                                            <button onClick={this.entrar} className="btn btn-success">
+                                                <i className="pi pi-sign-in"></i>Entrar</button>
+                                            <button onClick={this.prepareCadastrar} 
+                                                    className="btn btn-danger">
+                                                    <i className="pi pi-plus"></i>  Cadastrar
+                                            </button>
                                         </fieldset>
                                     </div>
                                 </div>
@@ -53,10 +78,11 @@ class Login extends React.Component{
                     </div>
                 </div>
             </div>
-        </div>
+
         )
-       
     }
 }
 
-export default Login
+Login.contextType = AuthContext
+
+export default withRouter( Login )
